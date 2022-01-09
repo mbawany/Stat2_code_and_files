@@ -39,10 +39,10 @@ head(stat1_homework6)
 biotech_data = subset(stat1_homework6, subset = stat1_homework6$`Industry Group` == "Biotechnology")
 IS_data = subset(stat1_homework6, subset = stat1_homework6$`Industry Group` == "Internet software and services")
 
-xbar_biotech = mean(biotech_data$`Cost of capital in US$ (%)`)
-n_biotech =    length(biotech_data$`Cost of capital in US$ (%)`)
-sd_sample_of_x_biotech = sd(biotech_data$`Cost of capital in US$ (%)`)
-sd(biotech_data$`Cost of capital in US$ (%)`)
+xbar_biotech <- mean(biotech_data$`Cost of capital in US$ (%)`)
+n_biotech <-    length(biotech_data$`Cost of capital in US$ (%)`)
+# SD automatically gets sample standard deviation
+sd_sample_of_x_biotech <- sd(biotech_data$`Cost of capital in US$ (%)`)
 
 
 xbar_IS            <- mean(IS_data$`Cost of capital in US$ (%)`)
