@@ -11,9 +11,6 @@ set
 # Load the packages. 
 library(tprstats)
 tprstats::setup() 
-#library(readxl)
-#stat1_homework6 <- read_excel("stat1_homework6.xlsx")
-#View(stat1_homework6)
 # Use CTRL + L to clear screen in console
 
 current_user_dir = dirname("~")
