@@ -6,7 +6,6 @@
 # Load Packages and Set working directory 
 #=========================================
 rm(list = ls())
-set
 # Load the packages. 
 library(tprstats)
 tprstats::setup() 
@@ -20,6 +19,12 @@ specific_path_to_dir <- paste(current_user_dir, working_dir_beyond_usr, sep = ''
 specific_path_to_dir
 setwd(specific_path_to_dir)
 getwd()
+
+
+#-------------------------------------------
+#  -----------------
+# Setup Complete 
+#  -----------------------------------------
 #=======================================
 # Exercise 1 
 #=======================================
@@ -39,7 +44,7 @@ sample_standard_deviation <- anticipated_standard_deviation/sqrt(sample_size)
 
 alpha <- .02
 
-#controlChart(mydata,??,??,n,??)
+#controlChart(mydata,μ,σ,n,α)
 controlChart(stat2_hw2pt1$Data,population_mean,anticipated_standard_deviation,sample_size,alpha)
 
 
@@ -52,8 +57,8 @@ controlChart(stat2_hw2pt1$Data,population_mean,anticipated_standard_deviation,sa
 #chart? The following are rules of thumb often applied in assessing whether the 
 #process may be out of control:  
 #  
-#  i) More than 2??? percent of values outside the control limits. (Recall that, on 
-#                                                                 average, ??? percent of the points will fall outside the limits even when the 
+#  i) More than 2 percent of values outside the control limits. (Recall that, on 
+#                                                                 average,  percent of the points will fall outside the limits even when the 
 #                                                                 process is working properly, so you should not expect every point to be 
 #                                                                 inside the control limits.)  
 #  ii) A trend in the sample, i.e., six or more points in a row all increasing or all 
@@ -94,8 +99,8 @@ print (paste("The probability of having a value less than z = 2.15 is ", probabi
 
 # Part D: What value of Alpha is the firm using  
 #=========================================
-# A firm uses ????1?????/2 =2.24 in plotting its 
-# control chart. Find the implied ?? for this firm. Hint: Build on the logic in the 
+# A firm uses 𝑍1−α/2 =2.24 in plotting its 
+# control chart. Find the implied α for this firm. Hint: Build on the logic in the 
 # previous question. 
 
 # Get the probability of z 
@@ -119,12 +124,12 @@ print (paste('The alpha for the Z value of 2.24 is ', unknown_alpha))
 # Part E: Find the upper bound of a control chart:   
 #=========================================
  #Suppose you have a 
- #manufacturing process designed to produce a component with ??=110 and ??=12. 
- #The sample size per sample is 25 and ??=.03. Calculate and enter the value 
+ #manufacturing process designed to produce a component with μ=110 and σ=12. 
+ #The sample size per sample is 25 and α=.03. Calculate and enter the value 
  # for the upper bound of your control chart. Hints:  
- # i) The upper bound of a control chart is: ??+????1?????/2???????? 
+ # i) The upper bound of a control chart is: μ+𝑍1−α/2σ𝑋̅ 
  # ii)  Recall that qnorm() is used to find the quantile of a normal distribution.  
- # iii) The question gives you ??, ??, and ????. Recall that ???????? = ?? ???????
+ # iii) The question gives you μ, σ, and 𝑛. Recall that σ𝑋̅ = σ √𝑛
 
 mu_part_E          <- 110
 sigma_part_E       <- 12 
@@ -159,5 +164,8 @@ critical_value <- (sample_mean - null_hyphotosis)/(sample_mean/sqrt(sample_size)
 
 2*pt(critical_value,degrees_of_freedom)
 
+# this P value is far larger than the the alpha of .05, therefore we can confidently reject the null
 
-
+#=======================================
+# Exercise 2 Simulation Model  
+#=======================================

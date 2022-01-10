@@ -1,5 +1,28 @@
+#=====================================
+#   Sample Simulations
+#=====================================
+
+#=========================================
+# Load Packages and Set working directory 
+#=========================================
+rm(list = ls())
+# Load the packages. 
+library(tprstats)
+tprstats::setup() 
+# Use CTRL + L to clear screen in console
+
+current_user_dir = dirname("~")
+working_dir_beyond_usr <- "/Documents/Tepper/Stats2/"
+# The paste function concatenates the text
+
+specific_path_to_dir <- paste(current_user_dir, working_dir_beyond_usr, sep = '')
+specific_path_to_dir
+setwd(specific_path_to_dir)
+getwd()
+
+
 #=======================================
-# Exercise 2 Simulation Model  
+# Samples Simulation Model  
 #=======================================
 rm(list = ls())
 
