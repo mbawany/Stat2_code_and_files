@@ -130,7 +130,7 @@ amount_df <- (data.frame(amount))
 
 amount_df$is_amount_lesser_than_12K <- ifelse(amount_df$amount < 12000,1,0)
 
-view(amount_df)
+#view(amount_df)
 
 print(mean(amount_df$is_amount_lesser_than_12K))
 
@@ -167,6 +167,97 @@ select_distribution(xbar)
 # period of 19 years.
 rm(list = ls())
 # Import the dataset 
-fargo_temps <- read_excel("files/stat2_homework1_pt1.xlsx")
+fargo_temps <- read_excel("files/Fargo_Feb_Temp.xlsx")
+
+quantile(fargo_temps$TEMP_FARGO, c(.95,.05))
+#count how many NAs are in the dataset 
+sapply(fargo_temps, function(x) sum(is.na(x)))
+
+# Get the row(s) which has an NA 
+subset(fargo_temps, subset = is.na(fargo_temps$TEMP_FARGO))
+# Remove NAs
+no_null_data_set = na.omit(fargo_temps$TEMP_FARGO)
+#Now run the thing without errors
+quantile(no_null_data_set, c(.95,.05))
+#Calculate Mean 
+mean(no_null_data_set)
+# this takes care of null by omitting them 
+hist_CI(no_null_data_set)
+
+select_distribution(fargo_temps$TEMP_FARGO)
+
+seed_value <-  33
+set.seed(seed_value)
+#simluate 1500 samples 
+
+# using values i got from the above function 
+#Estimated parameters for the snorm :
+# xi      omg    alpha 
+# 30.63653 20.89595 -2.73348 
+sample_size <- 1500 
+xi <- 30.63653
+omg <- 20.89595
+given_alpha <- -2.73348 
+
+#rsn(n,xi,omg,alpha) 
+fargo_simulated_temps <- rsn(sample_size, xi, omg, given_alpha)
+
+hist_CI(fargo_simulated_temps)
 
 
+
+
+# Example 6: Let’s fit a distribution to daily returns to GE stock in 2019. Import 
+# GE_Data_12_17_18_to_12_13_19.xlsx. In this example, you will learn how to fit individual 
+# distributions that you might wish to compare. You will also see that these data provide a real-
+#   world example of data that fit nicely to a t-distribution. 
+
+rm(list = ls())
+ge_data <- read_excel("files/GE_Data_12_17_18_to_12_13_19.xlsx")
+
+select_distribution(ge_data$returns_GE)
+
+
+# now time to fit a distribution the following options are available 
+# norm", "unif", "t", "snorm", "weibull", "gamma", "lnorm", "exp"  
+
+par(mfrow=c(1,2))
+
+fit_distribution(ge_data$returns_GE, 'norm')
+fit_distribution(ge_data$returns_GE, 't')
+
+#show only one plot per area
+par(mfrow=c(1,1)) 
+
+# Example 7 
+# use distribution from example 6. Variables for that are as follows
+
+seed_value <- 33
+set.seed(seed_value)
+mean = 0.0004413722 
+degrees_of_freedom = 3.3691890267 
+sample_standard_deviation = 0.0179998429
+
+strike_price = 12 
+day_of_expiry = 91
+
+#getting day 1 price
+price_of_stock = 11.34
+
+number_of_simulations = 5000
+simulation_results= 0
+
+for (simulation_number in 1:number_of_simulations){
+  
+for (day in 2:day_of_expiry)
+{
+  t_value <- mean + sample_standard_deviation * rt(1,degrees_of_freedom)
+  price_of_stock[day] <- (1 + t_value) * price_of_stock[day-1] 
+  
+}
+simulation_results[simulation_number] <- max(price_of_stock[90] - strike_price,0)
+}
+
+
+v = mean(simulation_results)
+v
