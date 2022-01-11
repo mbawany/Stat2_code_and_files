@@ -22,7 +22,13 @@ specific_path_to_dir
 setwd(specific_path_to_dir)
 getwd()
 
-
+# Slice with columns name
+# df[, c('ID', 'store')]
+# 
+# fahrenheit_to_celsius <- function(temp_F) {
+#   temp_C <- (temp_F - 32) * 5 / 9
+#   return(temp_C)
+# }
 
 #+=============================================================================
 #+ Messy initial stuff over, now main stuff
