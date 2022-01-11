@@ -169,3 +169,322 @@ critical_value <- (sample_mean - null_hyphotosis)/(sample_mean/sqrt(sample_size)
 #=======================================
 # Exercise 2 Simulation Model  
 #=======================================
+
+#recording variables for first spin 
+first_spin_min <- 0 
+first_spin_max <- 5000
+
+#recording variables for Second spin 
+second_spin_min <- 0 
+second_spin_max <- 9000
+
+#recording variables for Third spin 
+third_spin_min <- 0 
+third_spin_max <- 12000
+
+number_of_times_to_run = 5000
+
+seed_value <- 10 
+
+set.seed(seed_value)
+
+# Get simulation results 
+
+spin_1_sim_results <- runif(number_of_times_to_run, first_spin_min, first_spin_max)
+spin_2_sim_results <- runif(number_of_times_to_run, second_spin_min, second_spin_max)
+spin_3_sim_results <- runif(number_of_times_to_run, third_spin_min, third_spin_max)
+
+total_sim_results <- spin_1_sim_results + spin_2_sim_results + spin_3_sim_results
+
+#Part A report MEAN 
+print("the mean of the simulation is: ", mean(total_sim_results), sep='')
+      
+
+#Part B report 90% CI
+quantile(total_sim_results, c(.1, .9))
+hist_CI(total_sim_results)
+
+### QUESTION FOR THE PROFESSOR - Why doesn't this get the confidence interval. This code should get the right amount but it differs form the output of the HIST_CI
+#mean(total_sim_results) + (sd(total_sim_results)) * qt(.05,5000-1,lower.tail = F)
+##
+
+is_amount_less_than_20k = ifelse(total_sim_results < 20000,1,0)
+#Part C teh probability of receiveing less than 20k 
+mean(is_amount_less_than_20k)
+#=======================================
+# Hungry Dawg Part D 
+#=======================================
+
+# Clear Environment
+rm(list=ls())
+
+# We initialize the following six variables to the same values as above
+mu =250 # Mean of claims in the current month (month 1)
+N=18533 # Employment in the current month
+EmplContrib=125  # Employee contribution
+Claim=0 # This will contain the claim per employee each month
+CC=0    # This will contain company cost each month
+TCC=0   # This will contain total company cost for the next 12 months
+
+# Set Parameter Values to incorporate uncertainty
+CGro=1+.01  # 1 + Growth rate of average claim per employee
+
+EGroMin = -.04  # 1 + lower bound of growth rate of employment
+EGroMax = .08  # 1 + upper bound of growth rate of employment
+
+# Standard Deviation of Claims
+SDC = 3   # Standard deviation of claims
+
+
+set.seed(33)
+for (r in 1:1000) {
+  CC=0
+  Claim=0
+  for (t in 2:13) {
+    N[t]=N[t-1]*runif(1,EGroMin,EGroMax)
+    mu[t]=mu[t-1]*1.01
+    Claim[t]=rnorm(1,mu[t],SDC) 
+    EmplContrib[t]=125
+    CC[t]=N[t]*(Claim[t]-EmplContrib[t])
+  }
+  TCC[r]=sum(CC[2:13])/1e6    # Company cost is expressed in millions
+}
+
+# Mean and Confidence Interval
+hist_CI(TCC,main = "Simulated Distribution of Company Cost: Model 1", 
+        xlab = "Company Cost and 90% Confidence Interval")
+
+#=======================================
+# Hungry Dawg Part E 
+#=======================================
+
+# Clear Environment
+rm(list=ls())
+
+# We initialize the following six variables to the same values as above
+mu =250 # Mean of claims in the current month (month 1)
+N=18533 # Employment in the current month
+EmplContrib=125  # Employee contribution
+Claim=0 # This will contain the claim per employee each month
+CC=0    # This will contain company cost each month
+TCC=0   # This will contain total company cost for the next 12 months
+
+# Set Parameter Values to incorporate uncertainty
+CGro=1+.01  # 1 + Growth rate of average claim per employee
+
+mean = -.04  # growth rate mean 
+standard_deviation = .08  # growth rate standard deviation 
+
+# Standard Deviation of Claims
+SDC = 3   # Standard deviation of claims
+
+
+set.seed(33)
+for (r in 1:1000) {
+  CC=0
+  Claim=0
+  for (t in 2:13) {
+    N[t]=N[t-1]* (1+rnorm(1,mean,standard_deviation))
+    mu[t]=mu[t-1]*1.01
+    Claim[t]=rnorm(1,mu[t],SDC) 
+    EmplContrib[t]=125
+    CC[t]=N[t]*(Claim[t]-EmplContrib[t])
+  }
+  TCC[r]=sum(CC[2:13])/1e6    # Company cost is expressed in millions
+}
+
+# Mean and Confidence Interval
+hist_CI(TCC,main = "Simulated Distribution of Company Cost: Model 1", 
+        xlab = "Company Cost and 90% Confidence Interval")
+
+
+#=======================================
+# Exercise 3
+#=======================================
+
+
+#** SKipping to part F as that is what we know how to do as of now 
+#*
+
+rm(list = ls()) 
+
+brand_a_mileage_mean <- 81.22
+brand_a_mileage_varience <- 59.76
+
+brand_b_mileage_mean <- 86.04
+brand_b_mileage_varience <- 56.98
+
+sample_size = 72 #this was found in part E 
+
+#8 Part F, find average difference in mileage 
+difference_in_mileage <- brand_b_mileage_mean - brand_a_mileage_mean 
+
+#* part G
+#* What is the T statistic for testing whether these are equal 
+#* slide 11 of AW session 2 for more info and formula
+
+estimated_standard_error = sqrt((brand_a_mileage_varience/sample_size) + (brand_b_mileage_varience/sample_size))
+hypothosis_t_stat = difference_in_mileage / estimated_standard_error
+
+#* Part H 
+#* 
+combined_degrees_of_freedom = (sample_size * 2) - 2 
+2 * pt(-abs(hypothosis_t_stat),combined_degrees_of_freedom)
+
+# Part I 
+miles_data <- read_excel('files/NLD_Mileage_Experiment.xlsx')
+sample_regression <- lm(Miles~Brand_A, data = miles_data)
+
+summaryH(sample_regression)
+
+# Part J & K
+# 
+sample_regression <- lm(Miles~Age, data = miles_data)
+
+summaryH(sample_regression)
+
+# Check criticism by evaluating if the difference in the vans is 0 
+data_for_brand_a <- subset(miles_data, subset = miles_data$Brand_A == 1)
+data_for_brand_b <- subset(miles_data, subset = miles_data$Brand_A == 0)
+
+# Age of vans is stored in the Age variable 
+# This is acedemic to see if there is a significant difference between the two mean ages 
+# mean_of_van_age_brand_a <- mean(data_for_brand_a$Age)
+# mean_of_van_age_brand_b <- mean(data_for_brand_b$Age)
+# 
+# sd_of_van_age_brand_b <- sd(data_for_brand_b$Age)
+# sd_of_van_age_brand_a <- sd(data_for_brand_a$Age)
+# 
+# print(paste("Mean for brand A = ", mean_of_van_age_brand_a, "  and the SD is ", sd_of_van_age_brand_a))
+# print(paste("Mean for brand B = ", mean_of_van_age_brand_b, "  and the SD is ", sd_of_van_age_brand_b))
+# 
+# mean_diff_in_age <- mean_of_van_age_brand_a - mean_of_van_age_brand_b
+# estimated_standard_error_of_age = sqrt()
+
+
+
+
+#*==================================================================
+#* Exercise 4 
+#* =================================================================
+#* 
+# Answer 1 
+# No as the relationship could be a negative one. The metric we should look at to determine how much of X explains y is the R squared
+
+# Answer 2 
+# The regression could have an intercept of less than zero or even higher as it tries to determine the relationship. 
+
+
+# Imported cpde from the assignements page on canvas
+
+#   Set working directory and packages
+# Clear the working space
+rm(list = ls())
+
+# Set your working directory by clicking Session/Set working Directory/Choose Directory
+# Then navigate to the folder where you placed this file and click Select Folder 
+Compap_Credcrd_Treas_Rates <- read_excel('files/Compap_Credcrd_Treas_Rates.xlsx')
+# Load the packages, ignore warnings. 
+library(tprstats)
+tprstats::setup()
+
+#  Import Compap_Credcrd_Treas_Rates Dataset
+# For convenience, put the data in a data file with a shorter name.
+CCData=Compap_Credcrd_Treas_Rates
+
+# Calculate quarter-to-quarter changes in credit card rates
+dCredcrd=with(CCData,Credcrd-lag(Credcrd,1))
+dCompap=with(CCData,Compap-lag(Compap,1))
+dTreas=with(CCData,Treas-lag(Treas,1))
+
+
+
+# Regress changes in Credit Card rates on changes in Treasury rates
+CredReg=lm(dCredcrd~dTreas)
+summaryHAC(CredReg)
+
+# Test null hypothesis that coefficient of dTreas=1
+coefTestHAC(CredReg,"dTreas=1")
+# Regress changes in Commercial Paper rates on changes in Treasury rates
+
+
+# Create a variable named Observation to use for plotting
+Time=seq(1,92)
+
+
+
+CredReg=lm(dCredcrd~dTreas) 
+summaryHAC(CredReg) # this gives you the answer to part D as well
+
+
+# Part D test whether the b1 is zero 
+
+xbar <- 0.346150   
+standard_error <- 0.077219
+degrees_of_freedom <- length(dCredcrd) - 2
+hypothoisis <-  .3
+t_stat <- (xbar - hypothoisis)/standard_error
+
+2 * pt(- abs(t_stat), degrees_of_freedom)
+
+# This is well below the alpha of 1 
+
+# Part E, Yes this has some effect on the credit score, although the R2 score is too low for that. It is suggested that the impact may not be as big
+
+plot(dCredcrd, dTreas, main="Fit Example",
+     xlab="Credit Card ", ylab="Treasury ", pch=19, col = 'navy') 
+abline(a=0.003618   , b=xbar   , col='red')
+
+#-----------------------------------------------------------------------
+# Part G
+#-----------------------------------------------------------------------
+
+
+
+# Regress changes in Commercial Paper rates on changes in Treasury rates
+
+
+# Create a variable named Observation to use for plotting
+Time=seq(1,92)
+
+
+
+CredReg=lm(dCompap~dTreas) 
+summaryHAC(CredReg) 
+
+# Part H 
+# Test null hypothesis that coefficient of dTreas=0
+coefTestHAC(CredReg,"dTreas=0")
+
+xbar <- 0.940797      
+standard_error <- 0.050951  
+degrees_of_freedom <- length(dCredcrd) - 2
+hypothoisis <-  0
+t_stat <- (xbar - hypothoisis)/standard_error
+
+2 * pt(- abs(t_stat), degrees_of_freedom)
+
+plot(dCredcrd, dTreas, main="Fit Example",
+     xlab="Credit Card ", ylab="Treasury ", pch=19, col = 'navy') 
+abline(a=0.003618   , b=xbar   , col='red')
+
+
+# Part H, Very much so. There seems to be a much higher correlation 
+
+# Part J 
+
+# Plot dCompap and dTreas on same graph
+plot(Time,dCompap,col="white",ylab="Interest Rate Changes",
+     main = "Variation in Commercial Paper and Treasury Rates Over Time")
+lines(Time,dCompap,lw=2)
+lines(Time,dTreas,col="red",lw=2)
+# part K
+
+plot(Time,dCredcrd,col="white",ylab="Interest Rate Changes",
+     main = "Variation in credit card and Treasury Rates Over Time")
+lines(Time,dCredcrd,lw=2)
+lines(Time,dTreas,col="red",lw=2)
+
+#Part I 
+#* Very much so. There is a strong pattern between commercial paper and the treasury rates. My XY graph also showed this.
+#* The other 
