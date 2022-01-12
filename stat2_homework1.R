@@ -69,16 +69,41 @@ controlChart(stat2_hw2pt1$Data,population_mean,anticipated_standard_deviation,sa
 # 30/70.0
 # Better way to count this 
 
+count = 0 # This will store our total count if our variable is larger than the limit 
+for (row_we_are_on in 1:70){
+  #row_we_are_on, from now on, has which row number we are currently processing
+  print(stat2_hw2pt1$Data[row_we_are_on]) # This is effectively saying print out the value of the column data in row
+  if (abs(stat2_hw2pt1$Data[row_we_are_on] - population_mean) > acceptance_interval){ # this is saying if the row we are on is outside the acceptance interval, then do the steps in the brackets
+    count = count + 1 # this just says increase the count by one
+  }
+}
+
+
+
+
+
 acceptance_interval_without_pop_mean <-  qnorm(1-alpha/2) * anticipated_standard_deviation/sample_size^.5
 
 
 
 stat2_hw2pt1$is_outside_interval <- abs(stat2_hw2pt1$Data - population_mean) > acceptance_interval_without_pop_mean 
 
-view(stat2_hw2pt1)
+#view(stat2_hw2pt1)
 
 all_observations_outside_interval <- subset(stat2_hw2pt1, stat2_hw2pt1$is_outside_interval == TRUE)
 number_of_points_outside_interval <- length(all_observations_outside_interval$is_outside_interval)
+
+count_of_points_outside_interval = 0 # This will store our total count if our variable is larger than the limit 
+for (row_we_are_on in 1:70){
+  #row_we_are_on, from now on, has which row number we are currently processing
+  #print(stat2_hw2pt1$Data[row_we_are_on]) # This is effectively saying print out the value of the column data in row
+  if (abs(stat2_hw2pt1$Data[row_we_are_on] - population_mean) > acceptance_interval_without_pop_mean){ # this is saying if the row we are on is outside the acceptance interval, then do the steps in the brackets
+    count_of_points_outside_interval = count_of_points_outside_interval + 1 # this just says increase the count by one
+  }
+}
+
+
+
 
 print (paste("Total observations outside interval were noted to be ", number_of_points_outside_interval, sep=''))
 print (paste("The error rate, points outside the interval over sample size, is ", number_of_points_outside_interval/sample_size,sep=''))
@@ -201,7 +226,7 @@ print("the mean of the simulation is: ", mean(total_sim_results), sep='')
       
 
 #Part B report 90% CI
-quantile(total_sim_results, c(.1, .9))
+quantile(total_sim_results, c(.05, .95))
 hist_CI(total_sim_results)
 
 ### QUESTION FOR THE PROFESSOR - Why doesn't this get the confidence interval. This code should get the right amount but it differs form the output of the HIST_CI
