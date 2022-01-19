@@ -69,15 +69,6 @@ controlChart(stat2_hw2pt1$Data,population_mean,anticipated_standard_deviation,sa
 # 30/70.0
 # Better way to count this 
 
-count = 0 # This will store our total count if our variable is larger than the limit 
-for (row_we_are_on in 1:70){
-  #row_we_are_on, from now on, has which row number we are currently processing
-  print(stat2_hw2pt1$Data[row_we_are_on]) # This is effectively saying print out the value of the column data in row
-  if (abs(stat2_hw2pt1$Data[row_we_are_on] - population_mean) > acceptance_interval){ # this is saying if the row we are on is outside the acceptance interval, then do the steps in the brackets
-    count = count + 1 # this just says increase the count by one
-  }
-}
-
 
 
 
@@ -120,7 +111,7 @@ print ("This is concerning as the rate should be 2 * alpha, 4%. Also there is a 
 
 probability_of_draw <- pnorm(2.15)
 print (paste("The probability of having a value less than z = 2.15 is ", probability_of_draw, sep=''))
-
+# 0.98422239260891
 
 # Part D: What value of Alpha is the firm using  
 #=========================================
@@ -159,10 +150,10 @@ print (paste('The alpha for the Z value of 2.24 is ', unknown_alpha))
 mu_part_E          <- 110
 sigma_part_E       <- 12 
 sample_size_part_E <- 25
-alpha_part_E       <- 0.3
+alpha_part_E       <- 0.03
 
 # Step 1 Get Z value 
-z_value_part_E = pnorm(1-(alpha_part_E/2))
+z_value_part_E = qnorm(1-(alpha_part_E/2))
 
 # Step 2 calculate the Acceptance interval without the population mean 
 acceptance_interval_without_pop_mean_part_E = z_value_part_E * (sigma_part_E/sqrt(sample_size_part_E))
@@ -182,14 +173,15 @@ sample_mean <- mean(stat2_hw2pt1$Data)
 sample_standard_deviation <- sd(stat2_hw2pt1$Data)
 alpha <-  .05
 null_hyphotosis <- 120
-degrees_of_freedom <- sample_mean - 1
+degrees_of_freedom <- sample_size - 1
 
 ### This seems wrong
-critical_value <- (sample_mean - null_hyphotosis)/(sample_mean/sqrt(sample_size))
+critical_value <- (sample_mean - null_hyphotosis)/(sample_standard_deviation/sqrt(sample_size))
 
 2*pt(critical_value,degrees_of_freedom)
 
 # this P value is far larger than the the alpha of .05, therefore we can confidently reject the null
+t.test(stat2_hw2pt1$`Data`,mu=120)
 
 #=======================================
 # Exercise 2 Simulation Model  
@@ -234,14 +226,38 @@ hist_CI(total_sim_results)
 ##
 
 is_amount_less_than_20k = ifelse(total_sim_results < 20000,1,0)
+
 #Part C teh probability of receiveing less than 20k 
 mean(is_amount_less_than_20k)
+#Alternate method
+mean(total_sim_results < 20000)
+
 #=======================================
 # Hungry Dawg Part D 
 #=======================================
+#==============================================================================
+# Simulation Model Including Coefficient Uncertainty: Model 3
+#==============================================================================
 
-# Clear Environment
-rm(list=ls())
+# We do not know the population coefficients.
+# We obtain coefficient estimates from our sample of data
+# If we obtained another 32 months of data, we would obtain 
+# different estimates than in our current data
+# We can simulate alternative coefficient estimates we might
+# obtain if, hypothetically we obtained additional samples of data
+# The coefDrawH() command simulates draws of coefficients
+
+HungryDawg_32months <- read_excel("files/HungryDawg_32months.xlsx")
+# Select a distribution for employment growth
+select_distribution(HungryDawg_32months$EmplGro)
+
+EmplReg=lm(EmplContrib~Claims,data=HungryDawg_32months)
+
+# Set the seed once
+set.seed(33)
+# Run the following a few times
+coefDrawHAC(EmplReg)
+
 
 # We initialize the following six variables to the same values as above
 mu =250 # Mean of claims in the current month (month 1)
@@ -254,37 +270,49 @@ TCC=0   # This will contain total company cost for the next 12 months
 # Set Parameter Values to incorporate uncertainty
 CGro=1+.01  # 1 + Growth rate of average claim per employee
 
-EGroMin = -.04  # 1 + lower bound of growth rate of employment
-EGroMax = .08  # 1 + upper bound of growth rate of employment
+EGroMin = 1-.04  # 1 + lower bound of growth rate of employment
+EGroMax = 1+.08  # 1 + upper bound of growth rate of employment
 
 # Standard Deviation of Claims
 SDC = 3   # Standard deviation of claims
 
+# Standard Deviation of Employee Contribution Residuals
+SDECresid=3.10
+
+# We will draw coefficients and put them in a variable named CoefD
+coefD=0
 
 set.seed(33)
 for (r in 1:1000) {
   CC=0
   Claim=0
+  coefD=coefDrawHAC(EmplReg) # Coefficients draw named coefD
   for (t in 2:13) {
-    N[t]=N[t-1]*runif(1,EGroMin,EGroMax)
+    N[t]=N[t-1]*runif(1,EGroMin,EGroMax)  
     mu[t]=mu[t-1]*1.01
     Claim[t]=rnorm(1,mu[t],SDC) 
-    EmplContrib[t]=125
+    EmplContrib[t]=coefD[1]+coefD[2]*Claim[t]+rnorm(1,0,SDECresid) # coefD used here.
     CC[t]=N[t]*(Claim[t]-EmplContrib[t])
   }
   TCC[r]=sum(CC[2:13])/1e6    # Company cost is expressed in millions
 }
 
+
 # Mean and Confidence Interval
-hist_CI(TCC,main = "Simulated Distribution of Company Cost: Model 1", 
+hist_CI(TCC,main = "Simulated Distribution of Company Cost: Model 3", 
         xlab = "Company Cost and 90% Confidence Interval")
 
 #=======================================
 # Hungry Dawg Part E 
 #=======================================
 
-# Clear Environment
-rm(list=ls())
+EmplReg=lm(EmplContrib~Claims,data=HungryDawg_32months)
+
+# Set the seed once
+set.seed(33)
+# Run the following a few times
+coefDrawHAC(EmplReg)
+
 
 # We initialize the following six variables to the same values as above
 mu =250 # Mean of claims in the current month (month 1)
@@ -297,36 +325,100 @@ TCC=0   # This will contain total company cost for the next 12 months
 # Set Parameter Values to incorporate uncertainty
 CGro=1+.01  # 1 + Growth rate of average claim per employee
 
-mean = -.04  # growth rate mean 
-standard_deviation = .08  # growth rate standard deviation 
+EGroMin = 1-.04  # 1 + lower bound of growth rate of employment
+EGroMax = 1+.08  # 1 + upper bound of growth rate of employment
 
 # Standard Deviation of Claims
 SDC = 3   # Standard deviation of claims
 
+# Standard Deviation of Employee Contribution Residuals
+SDECresid=3.10
+
+# We will draw coefficients and put them in a variable named CoefD
+coefD=0
 
 set.seed(33)
 for (r in 1:1000) {
   CC=0
   Claim=0
+  coefD=coefDrawHAC(EmplReg) # Coefficients draw named coefD
   for (t in 2:13) {
-    N[t]=N[t-1]* (1+rnorm(1,mean,standard_deviation))
+    N[t]=N[t-1]*rnorm(1,1.02,0.03) 
     mu[t]=mu[t-1]*1.01
     Claim[t]=rnorm(1,mu[t],SDC) 
-    EmplContrib[t]=125
+    EmplContrib[t]=coefD[1]+coefD[2]*Claim[t]+rnorm(1,0,SDECresid) # coefD used here.
     CC[t]=N[t]*(Claim[t]-EmplContrib[t])
   }
   TCC[r]=sum(CC[2:13])/1e6    # Company cost is expressed in millions
 }
 
-# Mean and Confidence Interval
-hist_CI(TCC,main = "Simulated Distribution of Company Cost: Model 1", 
-        xlab = "Company Cost and 90% Confidence Interval")
 
+# Mean and Confidence Interval
+hist_CI(TCC,main = "Simulated Distribution of Company Cost: Model 3", 
+        xlab = "Company Cost and 90% Confidence Interval")
 
 #=======================================
 # Exercise 3
 #=======================================
 
+# Part A.
+#* What is the definition of power
+#* (Insert Games of thrones reference here)
+#* Power is a percent which signifies how unlikely it is for our hypothosis test to be incorrect 
+#*
+#* Part B 
+#* 
+rm(list = ls())
+
+difference_in_mean <- 4 
+requested_power <- .75
+var_a <- "Number of Brand A Tires "
+var_B <- "Number of Brand B Tires "
+standard_deviation_for_var_A <- 8
+standard_deviation_for_var_B <- 8
+number_of_samples <- NULL 
+significance_of_test = .05
+split_percentage_for_var_B <- .5
+
+# Part B 
+AB_t2n(percent_B = split_percentage_for_var_B, mean_diff =  difference_in_mean, sd_A = standard_deviation_for_var_A, sd_B =  standard_deviation_for_var_B, sig_level =  significance_of_test, power = requested_power , alternative = 'two_sided')
+# 113 - 114 tires as 50 50 split 
+
+# part C 
+requested_power <- .9
+AB_t2n(percent_B = split_percentage_for_var_B, mean_diff =  difference_in_mean, sd_A = standard_deviation_for_var_A, sd_B =  standard_deviation_for_var_B, sig_level =  significance_of_test, power = requested_power , alternative = 'two_sided')
+# 170 tires 
+
+# D
+split_percentage_for_var_B <- .4
+AB_t2n(percent_B = split_percentage_for_var_B, mean_diff =  difference_in_mean, sd_A = standard_deviation_for_var_A, sd_B =  standard_deviation_for_var_B, sig_level =  significance_of_test, power = requested_power , alternative = 'two_sided')
+
+#178 tires 
+177.3944 * .6 #Brand A 107 
+177.3944 * .4 #Brand B 71
+
+
+
+# Part E 
+ difference_in_mean <- 4 
+ requested_power <- .75
+ var_a <- "Number of Brand A Tires "
+ var_B <- "Number of Brand B Tires "
+ standard_deviation_for_var_A <- 8
+ standard_deviation_for_var_B <- 8
+ number_of_samples <- 72 
+ significance_of_test = .05
+
+AB_t2n(N = 144, percent_B = .5, mean_diff = 4, sd_A = 8, 
+       sd_B = 8, sig_level = .05, power = NULL, alternative = 'two_sided')
+
+
+
+# pwr.t.test(n=number_of_samples, d = difference_in_mean/standard_deviation_for_var_A, sig.level = significance_of_test, power = NULL, type = c('one.sample'))
+# 
+# pwr.t.test(n=number_of_samples, d = difference_in_mean/standard_deviation_for_var_B, sig.level = significance_of_test, power = NULL, type = c('one.sample'))
+
+# Question for TA, why these methods are giving different responses and how do we know which is correct. 
 
 #** SKipping to part F as that is what we know how to do as of now 
 #*
@@ -363,17 +455,17 @@ sample_regression <- lm(Miles~Brand_A, data = miles_data)
 summaryH(sample_regression)
 
 # Part J & K
-# 
-sample_regression <- lm(Miles~Age, data = miles_data)
+# The tires were applied randomly. Therefore they should have equally distributed 
+sample_regression <- lm(Age~Brand_A, data = miles_data)
 
 summaryH(sample_regression)
 
-# Check criticism by evaluating if the difference in the vans is 0 
-data_for_brand_a <- subset(miles_data, subset = miles_data$Brand_A == 1)
-data_for_brand_b <- subset(miles_data, subset = miles_data$Brand_A == 0)
-
-# Age of vans is stored in the Age variable 
-# This is acedemic to see if there is a significant difference between the two mean ages 
+## Check criticism by evaluating if the difference in the vans is 0 
+#data_for_brand_a <- subset(miles_data, subset = miles_data$Brand_A == 1)
+#data_for_brand_b <- subset(miles_data, subset = miles_data$Brand_A == 0)
+#
+## Age of vans is stored in the Age variable 
+## This is acedemic to see if there is a significant difference between the two mean ages 
 # mean_of_van_age_brand_a <- mean(data_for_brand_a$Age)
 # mean_of_van_age_brand_b <- mean(data_for_brand_b$Age)
 # 
@@ -383,8 +475,8 @@ data_for_brand_b <- subset(miles_data, subset = miles_data$Brand_A == 0)
 # print(paste("Mean for brand A = ", mean_of_van_age_brand_a, "  and the SD is ", sd_of_van_age_brand_a))
 # print(paste("Mean for brand B = ", mean_of_van_age_brand_b, "  and the SD is ", sd_of_van_age_brand_b))
 # 
-# mean_diff_in_age <- mean_of_van_age_brand_a - mean_of_van_age_brand_b
-# estimated_standard_error_of_age = sqrt()
+ mean_diff_in_age <- mean_of_van_age_brand_a - mean_of_van_age_brand_b
+ estimated_standard_error_of_age = sqrt()
 
 
 
@@ -489,9 +581,9 @@ t_stat <- (xbar - hypothoisis)/standard_error
 
 2 * pt(- abs(t_stat), degrees_of_freedom)
 
-plot(dCredcrd, dTreas, main="Fit Example",
+plot(dCompap, dTreas, main="Fit Example",
      xlab="Credit Card ", ylab="Treasury ", pch=19, col = 'navy') 
-abline(a=0.003618   , b=xbar   , col='red')
+abline(a=0   , b=xbar   , col='red')
 
 
 # Part H, Very much so. There seems to be a much higher correlation 
